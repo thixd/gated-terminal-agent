@@ -1,0 +1,7 @@
+harbor
+transformers==4.46.3
+torch==2.4.1
+accelerate==1.1.1
+trl==0.11.4
+wandb==0.18.5
+numpy==1.26.4
