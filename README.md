@@ -34,9 +34,12 @@ By running an A/B test between a Baseline Model (Standard Attention) and our Exp
 * **Environment:** Isolated Docker containers managed by the **Harbor** framework.
 * **State Representation:** The current working directory path, the previous bash command, and the standard output/error (`stdout`/`stderr`) of the terminal.
 * **Action Space:** Raw bash commands (e.g., `grep`, `curl`, `python`, `vim`).
-* **Reward Function:** * `+1.0` if the final container state passes the TerminalBench verification tests.
-  * `-0.1` for command syntax errors or fatal crashes.
-  * `-0.01` step penalty to encourage rapid resolution.
+* **Reward Function:** 
+  * The Big Win (+1.0): The agent types a command that successfully completes the entire TerminalBench task (e.g., the server starts, or the bug is fixed). Harbor verifies this automatically and sends the +1.0 reward.
+
+  * The Syntax Penalty (-0.1): The agent types something invalid (like gep instead of grep), causing a standard bash error.
+
+  * The Time Tax (-0.01): Every single time the agent takes a step, it loses a tiny fraction of a point. This forces the agent to be efficient. It learns that running 5 precise commands is better than blindly running ls 50 times.
 * **Algorithms:** Proximal Policy Optimization (PPO) via the Hugging Face `trl` library, utilizing QLoRA to train only the gating weights (W_g) for local VRAM efficiency.
 
 ## Current Status

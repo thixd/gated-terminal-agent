@@ -9,23 +9,39 @@ This document outlines the step-by-step roadmap to build, train, and evaluate th
 
 1. **Install Prerequisites:**
    * Ensure Docker is installed and running on your local machine.
-   * Create a fresh Python virtual environment.
+   * Create a fresh Python 3.12 virtual environment.
    * Install the Harbor execution harness and standard ML libraries:
      ```bash
      pip install harbor transformers torch accelerate trl wandb
      ```
    * Pin package versions in a `requirements.txt` file and record CUDA/PyTorch versions for reproducibility.
    * Set experiment seeds (Python, NumPy, PyTorch, environment) before every run.
-2. **Download the Benchmark:**
-   * Pull the TerminalBench 2.0 dataset via Harbor. 
-3. **Build the Baseline Agent:**
-   * Write a simple Python script (`baseline_agent.py`) that loads a 1B parameter model (e.g., `Llama-3.2-1B-Instruct`) and uses a standard ReAct prompting loop to output bash commands.
-4. **Run the Baseline A/B Test:**
-   * Execute the agent against the benchmark to record the initial Task Resolution Rate.
+2. **Validate Harbor + TerminalBench Setup:**
+   * Resolve the TerminalBench 2.0 dataset through Harbor and start a short oracle run to verify Docker task environments can launch:
      ```bash
-     harbor run --dataset terminal-bench@2.0 --agent baseline_agent.py --n-concurrent 2
+     harbor run -d terminal-bench@2.0 -a oracle
      ```
-   * *Outcome:* You now have the exact metric your RL Gated Agent needs to beat.
+   * For Phase 1 smoke testing, it is acceptable to stop the run early once several tasks have successfully started and completed.
+3. **Build the Baseline Agent:**
+   * Implement a minimal Harbor-compatible custom agent in `baseline_agent.py`.
+   * Start with a simple heuristic policy that runs a few shell inspection commands to validate the agent integration path before adding an actual LLM policy.
+   * Treat this heuristic agent as an infrastructure baseline, not the final scientific baseline for the project.
+4. **Run the Heuristic Baseline Trial:**
+   * Execute the custom heuristic baseline agent against a small number of tasks first to validate the integration:
+     ```bash
+     harbor run -d terminal-bench@2.0 --agent-import-path baseline_agent:BaselineHarborAgent -n 1 -l 1
+     ```
+   * Outcome: Harbor custom-agent execution, logging, and verification are confirmed to work.
+5. **Build the Model-Based Baseline:**
+   * First validate the model-backed path with a lightweight local model such as `Qwen2.5-0.5B-Instruct`.
+   * Treat this lightweight model primarily as an implementation check; it is likely too weak for harder TerminalBench tasks such as `gpt2-codegolf`.
+   * Use `Qwen2.5-1.5B-Instruct` as the primary scientific baseline once the model-backed integration is stable.
+   * `Llama-3.2-1B-Instruct` can be evaluated later if you have access to the gated Hugging Face repository and local authentication configured.
+   * Use the same Harbor integration path and seed controls as the heuristic baseline.
+6. **Run the Real Scientific Baseline:**
+   * Evaluate the Qwen-1.5B baseline agent on a small subset first, then scale up once the run is stable.
+   * Record its Task Resolution Rate, command efficiency, and failure patterns.
+   * *Outcome:* This model-based baseline is the real experimental reference point that the RL Gated Agent must beat.
 
 ---
 

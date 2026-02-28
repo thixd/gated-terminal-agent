@@ -8,16 +8,6 @@ from __future__ import annotations
 import os
 import random
 
-try:
-    import numpy as np
-except ModuleNotFoundError:  # pragma: no cover - optional during early setup
-    np = None
-
-try:
-    import torch
-except ModuleNotFoundError:  # pragma: no cover - optional during early setup
-    torch = None
-
 
 def set_global_seed(seed: int = 42) -> None:
     """
@@ -27,9 +17,18 @@ def set_global_seed(seed: int = 42) -> None:
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
     random.seed(seed)
+
+    try:
+        import numpy as np
+    except ModuleNotFoundError:  # pragma: no cover - optional during early setup
+        np = None
     if np is not None:
         np.random.seed(seed)
 
+    try:
+        import torch
+    except ModuleNotFoundError:  # pragma: no cover - optional during early setup
+        torch = None
     if torch is None:
         return
 
